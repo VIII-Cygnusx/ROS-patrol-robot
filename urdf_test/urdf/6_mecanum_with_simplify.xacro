@@ -1,0 +1,143 @@
+<?xml version="1.0"?>  
+<robot name="square_robot" xmlns:xacro="http://www.ros.org/wiki/xacro">  
+<!-- 小车自定义参数部分 -->
+	<!-- xacro自定义变量参数 -->
+    <!-- 轮子 宽0.044m 半径0.047m -->
+    <xacro:property name="length_wheel" value="0.044" /> 
+    <xacro:property name="radius_wheel" value="0.047" />
+	<!-- 左右轮子与车身中心点(0,0,0)的vx轴距离 0.124m y轴距离 0.11m z轴距离 0.048m-->
+	<xacro:property name="FL" value="0.124 0.11 -0.048"/>
+    <xacro:property name="FR" value="0.124 -0.11 -0.048"/>
+    <xacro:property name="BL" value="-0.124 0.11 -0.048"/>
+    <xacro:property name="BR" value="-0.124 -0.11 -0.048"/>
+	<!-- 长方体车身  (x方向)长=0.342m (y方向)宽0.16m (z方向)高=0.172-0.08m-->
+	<xacro:property name="bodywork" value="0.342 0.16 0.168"/>
+    <xacro:property name="PI"           value="3.1415926"/>
+    <!-- 定义一个名为 default_inertial 的XACRO宏 接受“mass”这个参数 -->
+    <xacro:macro name="default_inertial" params="mass">
+        <!-- 物体惯性描述 -->
+        <inertial>
+            <mass value="${mass}" />
+            <inertia ixx="0.1" ixy="0.0" 
+                     ixz="0.0"
+                     iyy="0.1" iyz="0.0"
+                     izz="0.1" />            
+        </inertial>
+    </xacro:macro>
+<!-- 小车自定义参数部分 -->
+
+
+<!-- 小车整体描述 -->
+	<!-- 小车整体坐标部分 -->
+    <link name="6_car">
+    </link>
+	<!-- 小车整体坐标部分 -->
+	<!-- 底盘部分 -->
+    <link name="base_footprint">
+   		<visual>
+			<geometry>
+      				<box size="0.001 0.001 0.001"/>
+     			</geometry>
+   		</visual>
+		<xacro:default_inertial mass="0.0001"/>     
+ 	</link>
+	<!-- 底盘部分 -->
+	<!-- 车身部分 -->
+	<link name="base_link">
+   		<visual>
+			<geometry>
+      				<box size="${bodywork}"/>
+     		</geometry>
+			<material name="white">
+				<color rgba="1 1 1 1"/>
+			</material>
+   		</visual>
+		<collision>
+			<geometry>
+       				<box size="${bodywork}"/>
+			</geometry>
+		</collision>
+        <xacro:default_inertial mass="8.2"/>    
+ 	</link>
+	<!-- 车身部分 -->
+	<!-- 轮子部分 -->
+	<xacro:macro name="wheel_" params="num">
+ 	<link name="wheel_${num}">
+   		<visual>
+     			<geometry>
+					<!-- 轮子宽${length_wheel}，半径${radius_wheel} -->
+       				<cylinder length="${length_wheel}" radius="${radius_wheel}"/>
+     			</geometry>
+   				<material name="black">
+					<color rgba="0 0 0 1"/>
+				</material>
+		</visual>
+		<collision>
+			<geometry>
+       				<cylinder length="${length_wheel}" radius="${radius_wheel}"/>
+			</geometry>
+		</collision>
+		<xacro:default_inertial mass="0.5"/>
+ 	</link>
+	</xacro:macro>
+	<xacro:wheel_ num="1" />
+	<xacro:wheel_ num="2" />
+	<xacro:wheel_ num="3" />
+	<xacro:wheel_ num="4" />
+	<!-- 轮子部分 -->
+
+
+    <!-- 底盘关节部分 -->
+    <joint name="6_car_joint" type="fixed">
+        <parent link = "6_car"/>
+        <child  link = "base_footprint"/>
+    </joint>
+    <!-- 底盘关节部分 -->
+    <!-- 车身关节部分 -->
+	<joint name="base_footprint_joint" type="fixed">
+		<parent link = "base_footprint" />
+		<child  link = "base_link" />
+		<origin xyz  = "0 0 0.126" />
+	</joint>
+    <!-- 车身关节部分 -->
+	<!-- 轮子关节连接部分 -->
+	<xacro:macro name="wheel_joints" params="pose num position">
+		<joint name="wheel_${pose}" type="continuous">
+			<parent link = "base_link"/>
+			<child  link = "wheel_${num}"/>
+			<origin rpy  = "${-PI/2} 0 0" xyz="${position}"/>
+			<axis   xyz  = "0 0 1" />
+            <limit  effort = "1" velocity="33.504" />
+		</joint>
+	</xacro:macro>
+	<xacro:wheel_joints pose="FL" num="1" position="${FL}" />
+	<xacro:wheel_joints pose="BL" num="2" position="${BL}" />
+	<xacro:wheel_joints pose="FR" num="3" position="${FR}" />
+	<xacro:wheel_joints pose="BR" num="4" position="${BR}" />
+	<!-- 轮子关节连接部分 -->
+<!-- 小车整体描述 -->
+
+
+<!-- GAZEBO相关插件 -->
+    <!-- 摄像头部分 -->
+    <xacro:include filename="$(find urdf_test)/urdf/gazebo_plugin_xacro/camera.xacro" />
+    <xacro:camera parent_link="base_link" coordinate="0.171 0 0" pose="0 0 0" width="640" height="480" fps="30" fov="2.178718" near="0.045" far="100"/>
+    <!-- 摄像头部分 -->
+    <!-- 2D激光雷达的部分 -->
+    <xacro:include filename="$(find urdf_test)/urdf/gazebo_plugin_xacro/2D_lidar.xacro" />
+    <xacro:G4_lidar parent_link="base_footprint" coordinate="0.146 0 0.225" pose="0 0 0" round_rate="12" resolution="0.28" range_min="0.1" range_max="16.0" />
+    <!-- 2D激光雷达的部分 -->
+    <!-- IMU部分 -->
+    <xacro:include filename="$(find urdf_test)/urdf/gazebo_plugin_xacro/IMU.xacro" />
+    <xacro:IMU parent_link="base_link" coordinate="-0.171 0 0" pose="0 0 0" xyz_noise="0.01 0.01 0.01" rpy_noise="0.01 0.01 0.01" />
+    <!-- IMU部分 -->
+    <!-- 小车控制器部分 -->
+    <xacro:include filename="$(find urdf_test)/urdf/gazebo_plugin_xacro/car_mecanum.xacro" />
+    <xacro:mecanum BaseFrame="6_car" lf="wheel_FL" bf="wheel_FR" lr="wheel_BL" br="wheel_BR" />
+    <!-- 小车控制器部分 -->
+	<!-- 深度相机部分 -->
+	<!-- <xacro:include filename="$(find urdf_test)/urdf/gazebo_plugin_xacro/Deepth_camera.xacro" />
+	<xacro:DeepthCAM parent_link="base_footprint" coordinate="0.146 0 0.275" pose="0 0 0" width="640" height="480" fps="30" fov="2.178718" near="0.45" far="100" /> -->
+	<!-- 深度相机部分 -->
+<!-- GAZEBO相关插件 -->
+</robot>

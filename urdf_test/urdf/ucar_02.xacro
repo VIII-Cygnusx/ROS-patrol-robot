@@ -1,0 +1,380 @@
+<?xml version="1.0"?>  
+<robot name="square_robot" xmlns:xacro="http://www.ros.org/wiki/xacro">  
+<!-- 小车自定义参数部分 -->
+	<!-- xacro自定义变量参数 -->
+    <!-- 轮子 宽0.044m 半径0.047m -->
+    <xacro:property name="length_wheel" value="0.044" /> 
+    <xacro:property name="radius_wheel" value="0.047" />
+	<!-- 左右轮子与车身中心点(0,0,0)的vx轴距离 0.124m y轴距离 0.11m z轴距离 0.048m-->
+	<xacro:property name="FL" value="0.117 0.106 -0.0465"/>
+    <xacro:property name="FR" value="0.117 -0.106 -0.0465"/>
+    <xacro:property name="BL" value="-0.117 0.106 -0.0465"/>
+    <xacro:property name="BR" value="-0.117 -0.106 -0.0465"/>
+	<!-- 长方体车身  (x方向)长=0.342m (y方向)宽0.16m (z方向)高=0.172-0.08m-->
+	<xacro:property name="bodywork_size" value="0.342 0.154 0.125"/>
+	<!-- 长方体车身 位置（相对于世界坐标）-->
+	<xacro:property name="bodywork_posi" value="0 0 0.0935"/>
+    <xacro:property name="PI"           value="3.1415926"/>
+
+    <!-- 均质长方体惯性参数 -->
+    <xacro:macro name="box_inertial" params="lenth width high mass">
+        <inertial>
+            <mass value="${mass}"/>
+            <inertia ixx="${mass / 12.0 * (width*width + high*high)}" ixy="0.0" 
+                     iyy="${mass / 12.0 * (lenth*lenth + high*high)}" iyz="0.0" 
+                     izz="${mass / 12.0 * (lenth*lenth + width*width)}" ixz="0.0" />
+        </inertial>
+    </xacro:macro>
+
+    <!-- 均质圆柱体惯性参数 -->
+    <xacro:macro name="cylinder_inertial" params="radius high mass">
+        <inertial>  
+            <mass value="${mass}"/>  
+            <inertia ixx="${mass / 12.0 * radius*radius + mass / 4.0 * high*high}" ixy="0.0"   
+                     iyy="${mass / 12.0 * radius*radius + mass / 4.0 * high*high}" iyz="0.0"  
+                     izz="${mass /  2.0 * radius*radius}"                          ixz="0.0" />  
+        </inertial>  
+    </xacro:macro>
+<!-- 小车自定义参数部分 -->
+
+
+
+
+
+
+
+
+
+<!-- 小车整体描述 -->
+	<!-- 小车整体坐标部分 -->
+    <!-- 用于定义机器人的一个刚体链接,这里会把ucar_02当成父坐标系 -->
+    <link name="ucar_02">
+    </link>
+	<!-- 小车整体坐标部分 -->
+	<!-- 车身部分 -->
+	<link name="base_link">
+   		<visual>
+			<geometry>
+      				<box size="${bodywork_size}"/>
+     		</geometry>
+			<material name="white">
+				<color rgba="1 1 1 1"/>
+			</material>
+   		</visual>
+		<collision>
+			<geometry>
+       				<box size="${bodywork_size}"/>
+			</geometry>
+		</collision>
+        <xacro:box_inertial lenth="0.342" width="0.154" high="0.125" mass="8" />  
+ 	</link>
+	<!-- 车身部分 -->
+	<!-- 轮子部分 -->
+	<xacro:macro name="wheel_" params="num model_path">
+ 	<link name="wheel_${num}">
+   		<visual>
+     			<geometry>
+                    <mesh filename="package://urdf_test/meshes/${model_path}" />
+                    <!-- 下面这种写法只会在gazebo加载模型，rviz不会显示 -->
+					<!-- <mesh filename="$(find urdf_test)/meshes/${model_path}" /> -->
+     			</geometry>
+   				<material name="black">
+					<color rgba="0 0 0 1"/>
+				</material>
+		</visual>
+		<collision>
+			<origin rpy="1.5709 0 0"/>
+			<geometry>
+       				<cylinder length="${length_wheel}" radius="${radius_wheel}"/>
+			</geometry>
+		</collision>
+        <xacro:cylinder_inertial radius="0.047" high="0.044" mass="0.5" />
+ 	</link>
+	</xacro:macro>
+	<xacro:wheel_ num="1" model_path="FL_r47_w44.dae"/>
+	<xacro:wheel_ num="2" model_path="BL_r47_w44.dae" />
+	<xacro:wheel_ num="3" model_path="FR_r47_w44.dae" />
+	<xacro:wheel_ num="4" model_path="BR_r47_w44.dae" />
+	<!-- 轮子部分 -->
+    <!-- IMU部分 -->
+    <link name="imu_link">
+        <collision>
+            <geometry>
+                <box size="0.05 0.05 0.05"/>
+            </geometry>
+        </collision>
+        <visual>
+            <geometry>
+                <box size="0.05 0.05 0.05"/>
+            </geometry>
+            <material name="green">
+                <color rgba="0 1 0 1"/>
+            </material>
+        </visual>
+        <inertial>
+            <mass value="1e-2" />
+                <inertia ixx="1e-6" ixy="0"
+                         iyy="1e-6" ixz="0"   
+                         izz="1e-6" iyz="0"/>
+        </inertial>
+    </link>
+    <!-- IMU部分 -->
+    <!-- 摄像头部分 -->
+    <link name="camera_link">
+        <collision>
+            <geometry>
+                <box size="0.05 0.05 0.05"/>
+            </geometry>
+        </collision>
+        <visual>
+            <geometry>
+                <box size="0.05 0.05 0.05"/>
+            </geometry>
+            <material name="red">
+                <color rgba="1 0 0 1"/>
+            </material>
+        </visual>
+        <inertial>
+            <mass value="1e-2" />
+            <inertia ixx="1e-6" ixy="0"  
+                     iyy="1e-6" iyz="0" 
+                     izz="1e-6" ixz="0"/>
+        </inertial>
+    </link>
+    <!-- 摄像头部分 -->
+    <!-- 2D激光雷达部分 -->
+    <link name="laser_frame">
+        <collision>
+            <geometry>
+                <cylinder radius="0.0355" length="0.016"/>
+            </geometry>
+        </collision>
+        <visual>
+            <geometry>
+                <cylinder radius="0.0355" length="0.016"/>
+            </geometry>
+        </visual>
+        <inertial>
+            <mass value="1e-2" />
+            <inertia ixx="1e-6" ixy="0"  
+                     iyy="1e-6" iyz="0"
+                     izz="1e-6" ixz="0"/>
+        </inertial>
+    </link>
+    <!-- 2D激光雷达部分 -->
+
+
+
+
+
+    <!-- 底盘关节部分 -->
+    <!-- 车身关节部分 -->
+	<joint name="base_link_joint" type="fixed">
+		<origin xyz="${bodywork_posi}"/>	
+		<parent link = "ucar_02" />
+		<child  link = "base_link" />
+	</joint>
+    <!-- 车身关节部分 -->
+	<!-- 轮子关节连接部分 -->
+	<xacro:macro name="wheel_joints" params="num posi axis">
+		<joint name="base_to_wheel${num}" type="continuous">
+			<origin xyz="${posi}"/>
+			<parent link = "base_link"/>
+			<child  link = "wheel_${num}"/>
+			<!-- 这定义了关节旋转的轴。xyz="0 0 1"意味着关节是沿着z轴旋转的 -->
+			<axis   xyz  = "${axis}" />
+            <limit  effort = "1" velocity="33.504" />
+		</joint>
+	</xacro:macro>
+	<xacro:wheel_joints num="1" posi="${FL}" axis="0  1 0" />
+	<xacro:wheel_joints num="2" posi="${BL}" axis="0  1 0" />
+	<xacro:wheel_joints num="3" posi="${FR}" axis="0 -1 0" />
+	<xacro:wheel_joints num="4" posi="${BR}" axis="0 -1 0" />
+	<!-- 轮子关节连接部分 -->
+    <!-- IMU关节部分 -->
+    <joint name="imu_joint" type="fixed">
+        <parent link = "base_link"/>
+        <child  link = "imu_link"/>
+    </joint>
+    <!-- IMU关节部分 -->
+    <!-- 摄像头关节部分 -->
+    <joint name="camera_joint" type="fixed">
+		<origin xyz="0.15 0.0 0.0165"/>
+        <parent link = "base_link"/>
+        <child  link = "camera_link"/>
+    </joint>
+    <!-- 摄像头关节部分 -->
+    <!-- 2D激光雷达关节部分 -->
+    <joint name="hokuyo_joint" type="fixed">
+		<origin xyz="0.1 0.0 0.0705"/>
+        <parent link = "base_link"/>
+        <child  link = "laser_frame"/>
+    </joint>
+    <!-- 2D激光雷达关节部分 -->
+<!-- 小车整体描述 -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- GAZEBO相关插件 -->
+
+    <!-- 摄像头部分 -->
+    <gazebo reference="camera_link">
+        <material>Gazebo/Red</material>
+        <sensor type="camera" name="camera1">
+            <update_rate>30.0</update_rate>
+            <camera name="head">
+                <horizontal_fov>2.178718</horizontal_fov>
+                <image>
+                    <width>640</width>
+                    <height>480</height>
+                <format>R8G8B8</format>
+                </image>
+                <clip>
+                    <near>0.045</near>
+                    <far>100</far>
+                </clip>
+
+                <noise>
+                    <type>gaussian</type>
+                    <mean>0.0</mean>
+                    <stddev>0.007</stddev>
+                </noise>
+            </camera>
+
+            <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
+                <alwaysOn>true</alwaysOn>
+                <updateRate>30.0</updateRate>
+                <cameraName>/</cameraName>
+                <imageTopicName>cam</imageTopicName>
+                <cameraInfoTopicName>camera_info</cameraInfoTopicName>
+                <frameName>camera_link</frameName>
+                <hackBaseline>0.07</hackBaseline>
+                <distortionK1>0.0</distortionK1>
+                <distortionK2>0.0</distortionK2>
+                <distortionK3>0.0</distortionK3>
+                <distortionT1>0.0</distortionT1>
+                <distortionT2>0.0</distortionT2>
+            </plugin>
+        </sensor>
+    </gazebo>  
+    <!-- 摄像头部分 -->
+
+
+    <!-- 2D激光雷达的部分 -->
+        <gazebo reference="laser_frame">
+            <material>Gazebo/Green</material>
+            <sensor type="gpu_ray" name="head_hokuyo_sensor">
+            <!-- 如果电脑没有gpu请用下面的代替,gpu_ray要比ray稳定且好用 -->
+            <!-- <sensor type="ray" name="head_hokuyo_sensor">             -->
+                <pose>0 0 0 0 0 0</pose>
+                <!-- 雷达射线可视化 -->
+                <visualize>false</visualize>
+                <!-- 雷达转360度的频率(单位是hz) -->
+                <update_rate>12</update_rate>
+                <ray>
+                    <scan>
+                        <horizontal>
+                            <!-- 雷达转360度所发射的射线 -->
+                            <samples>750</samples>
+                            <!-- 角度分辨率(单位是度) -->
+                            <resolution>0.12</resolution> 
+                            <!-- 雷达测量范围(单位弧度) -->
+                            <!-- 正前方向右的范围(单位弧度) -->
+                            <min_angle>-3.141592653</min_angle>
+                            <!-- 正前方向左的范围(单位弧度) -->
+                            <max_angle>3.141592653</max_angle>
+                        </horizontal>
+                    </scan>
+                    <range>
+                        <!-- 测量距离范围(单位m) -->
+                        <min>0.12</min>
+                        <max>16</max>
+                        <!-- 精度(单位是度) -->
+                        <resolution>0.48</resolution>
+                    </range>
+                    <noise>
+                        <!-- 高斯噪声 -->
+                        <type>gaussian</type>
+                        <mean>0.0</mean>
+                        <stddev>0.01</stddev>
+                    </noise>
+                </ray>
+                <plugin name="gazebo_ros_head_hokuyo_controller" filename="libgazebo_ros_gpu_laser.so">
+                <!-- 如果电脑没有gpu请用下面的代替 -->
+                <!-- <plugin name="gazebo_ros_head_hokuyo_controller" filename="libgazebo_ros_laser.so"> -->
+                    <!-- 发布数据的话题名 -->
+                    <topicName>/scan</topicName>
+                    <!-- 在tf树所属的坐标框架 -->
+                    <frameName>laser_frame</frameName>
+                </plugin>
+
+            </sensor>
+        </gazebo>
+    <!-- 2D激光雷达的部分 -->
+
+
+    <!-- IMU部分 -->
+    <gazebo reference="imu_link">
+        <material>Gazebo/Orange</material>
+        <gravity>true</gravity>
+
+        <sensor name="imu_sensor" type="imu">
+            <always_on>true</always_on>
+            <update_rate>100</update_rate>
+            <visualize>true</visualize>
+            <topic>__default_topic__</topic>
+
+            <plugin filename="libgazebo_ros_imu_sensor.so" name="imu_plugin">
+                <topicName>imu</topicName>
+                <bodyName>imu_link</bodyName>
+                <updateRateHZ>100.0</updateRateHZ>
+                <gaussianNoise>0.0</gaussianNoise>
+                <xyzOffset>0 0 0</xyzOffset>
+                <rpyOffset>0 0 0</rpyOffset>
+                <frameName>imu_link</frameName>
+            </plugin>
+            <pose>0 0 0 0 0 0</pose>
+        </sensor>
+    </gazebo>  
+    <!-- IMU部分 -->
+
+
+    <!-- 小车控制器部分 -->
+    <!-- 麦轮控制器 -->
+    <gazebo>
+        <plugin name="mecanum_controller" filename="libgazebo_ros_planar_move.so">
+            <alwaysOn>true</alwaysOn>
+            <updateRate>20.0</updateRate>
+            <commandTopic>cmd_vel</commandTopic>
+            <odometryTopic>odom</odometryTopic>
+            <odometryFrame>odom</odometryFrame>
+            <leftFrontJoint>base_to_wheel1</leftFrontJoint>
+            <rightFrontJoint>base_to_wheel3</rightFrontJoint>
+            <leftRearJoint>base_to_wheel2</leftRearJoint>
+            <rightRearJoint>base_to_wheel4</rightRearJoint>
+            <odometryRate>20.0</odometryRate>
+            <broadcastTF>0</broadcastTF>
+            <robotBaseFrame>ucar_02</robotBaseFrame>
+            <cmdTimeout>-1.0</cmdTimeout>
+        </plugin>
+    </gazebo>
+    <!-- 麦轮控制器 -->
+    <!-- 小车控制器部分 -->
+
+<!-- GAZEBO相关插件 -->
+</robot>

@@ -1,0 +1,70 @@
+<robot name="xxx_robot" xmlns:xacro="http://www.ros.org/wiki/xacro"> 
+    <xacro:macro name="IMU" params="parent_link coordinate pose rpy_noise xyz_noise">
+        <!-- IMU部分 -->
+        <link name="imu_link">
+            <collision>
+                <origin xyz="0 0 0" rpy="0 0 0"/>
+                <geometry>
+                    <box size="0.05 0.05 0.05"/>
+                </geometry>
+            </collision>
+
+            <visual>
+                <origin xyz="0 0 0" rpy="0 0 0"/>
+                    <geometry>
+                        <box size="0.05 0.05 0.05"/>
+                    </geometry>
+                <material name="green">
+                    <color rgba="0 1 0 1"/>
+                </material>
+            </visual>
+
+            <inertial>
+                <mass value="1e-2" />
+                    <origin xyz="0 0 0" rpy="0 0 0"/>
+                    <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6" />
+            </inertial>
+        </link>
+        <!-- IMU部分 -->
+
+
+
+        <!-- IMU关节部分 -->
+        <joint name="imu_joint" type="fixed">
+            <origin xyz  = "${coordinate}" rpy="${pose}"/>
+            <parent link = "${parent_link}"/>
+            <child  link = "imu_link"/>
+        </joint>
+        <!-- IMU关节部分 -->
+
+
+
+        <!-- IMUgazebo插件部分 -->
+        <gazebo reference="imu_link">
+            <material>Gazebo/Orange</material>
+            <gravity>true</gravity>
+
+            <sensor name="imu_sensor" type="imu">
+                <always_on>true</always_on>
+                <update_rate>100</update_rate>
+                <visualize>true</visualize>
+                <topic>__default_topic__</topic>
+
+                <plugin filename="libgazebo_ros_imu_sensor.so" name="imu_plugin">
+                    <topicName>imu</topicName>
+                    <bodyName>imu_link</bodyName>
+                    <!-- 数据更新频率 -->
+                    <updateRateHZ>100.0</updateRateHZ>
+                    <gaussianNoise>0.0</gaussianNoise>
+                    <gaussianNoiseXYZ>${xyz_noise}</gaussianNoiseXYZ>
+                    <gaussianNoiseRPY>${rpy_noise}</gaussianNoiseRPY>
+                    <xyzOffset>0 0 0</xyzOffset>
+                    <rpyOffset>0 0 0</rpyOffset>
+                    <frameName>imu_link</frameName>
+                </plugin>
+                <pose>0 0 0 0 0 0</pose>
+            </sensor>
+        </gazebo>  
+        <!-- IMUgazebo插件部分 -->
+    </xacro:macro>
+</robot>

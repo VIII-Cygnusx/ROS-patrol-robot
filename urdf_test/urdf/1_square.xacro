@@ -1,0 +1,32 @@
+<?xml version="1.0"?>  
+<robot name="square_robot" xmlns:xacro="http://www.ros.org/wiki/xacro">  
+  <!-- 定义一个名为square_side的变量 square_side=1.0 1.0 1.0 -->  
+  <xacro:property name="square_side" value="1.0 1.0 1.0"/>  
+
+
+    <!-- 定义正方形link -->  
+    <link name="square_link">  
+      <!-- 可视化 这里必须写名字-->
+      <visual name="square_visual"> 
+            <!-- 原点在父坐标系中的位置&原点相对于父坐标系的姿态 -->
+            <origin xyz="0 0 0" rpy="0 0 0"/>  
+            <!-- 几何描述 -->
+            <geometry>  
+                <!-- 定义一个立方体，其三个维度（长、宽、高） -->
+                <box size="${square_side}"/>
+            </geometry>
+            <!-- 材质定义 这里必须写名字-->
+            <material name="square_material">  
+                <!-- 定义材质颜色:蓝色 -->
+                <color rgba="0 0 1 1"/>  
+            </material>  
+      </visual>
+      <!-- 碰撞模型 -->
+      <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <box size="${square_side}"/>
+            </geometry>
+      </collision>
+    </link>
+</robot>

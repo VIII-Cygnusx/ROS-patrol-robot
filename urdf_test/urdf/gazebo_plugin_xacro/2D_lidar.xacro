@@ -1,0 +1,96 @@
+<robot name="xxx_robot" xmlns:xacro="http://www.ros.org/wiki/xacro"> 
+    <!-- 定义一个名为G4_lidar的MACRO的宏,接受parent_link coordinate pose参数 -->
+    <xacro:macro name="G4_lidar" params="parent_link coordinate pose round_rate resolution range_min range_max">
+    <!-- 2D激光雷达关节部分 -->
+        <joint name="hokuyo_joint" type="fixed">
+            <origin xyz  = "${coordinate}" rpy="${pose}"/>
+            <parent link = "${parent_link}"/>
+            <child  link = "laser_frame"/>
+        </joint>
+    <!-- 2D激光雷达关节部分 -->
+
+    <!-- 2D激光雷达部分 -->
+        <link name="laser_frame">
+            <collision>
+                <origin xyz="0 0 0" rpy="0 0 0"/>
+                <geometry>
+                    <box size="0.05 0.05 0.016"/>
+                </geometry>
+            </collision>
+
+            <visual>
+                <origin xyz="0 0 0" rpy="0 0 0"/>
+                <geometry>
+                    <!-- <mesh filename="package://urdf_test/meshes/hokuyo.dae"/> -->
+                    <box size="0.05 0.05 0.016"/>
+                </geometry>
+            </visual>
+
+            <inertial>
+                <mass value="1e-2" />
+                <origin xyz="0 0 0" rpy="0 0 0"/>
+                <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6" />
+            </inertial>
+        </link>
+    <!-- 2D激光雷达部分 -->
+
+    <!-- 2D激光雷达gazebo插件部分 -->
+        <gazebo reference="laser_frame">
+            <material>Gazebo/Green</material>
+            <sensor type="gpu_ray" name="head_hokuyo_sensor">
+            <!-- 如果电脑没有gpu请用下面的代替,gpu_ray要比ray稳定且好用 -->
+            <!-- <sensor type="ray" name="head_hokuyo_sensor">             -->
+                <pose>0 0 0 0 0 0</pose>
+                <!-- 雷达射线可视化 -->
+                <visualize>true</visualize>
+                <!-- 雷达转360度的频率(单位是hz) -->
+                <update_rate>${round_rate}</update_rate>
+
+                <ray>
+
+                    <scan>
+                        <horizontal>
+                            <!-- 雷达转360度所发射的射线 -->
+                            <samples>1280</samples>
+                            <!-- 角度分辨率(单位是度) -->
+                            <resolution>0.28</resolution> 
+                            <!-- 雷达测量范围(单位弧度) -->
+                            <!-- 正前方向右的范围(单位弧度) -->
+                            <min_angle>-3.141592653</min_angle>
+                            <!-- 正前方向左的范围(单位弧度) -->
+                            <max_angle>3.141592653</max_angle>
+                        </horizontal>
+                    </scan>
+
+                    <range>
+                        <!-- 测量距离范围(单位m) -->
+                        <min>${range_min}</min>
+                        <max>${range_max}</max>
+                        <!-- 精度(单位是度) -->
+                        <resolution>${resolution}</resolution>
+                    </range>
+
+                    <noise>
+                        <!-- 高斯噪声 -->
+                        <type>gaussian</type>
+                        <mean>0.0</mean>
+                        <stddev>0.01</stddev>
+                    </noise>
+
+                </ray>
+
+                <plugin name="gazebo_ros_head_hokuyo_controller" filename="libgazebo_ros_gpu_laser.so">
+                <!-- 如果电脑没有gpu请用下面的代替 -->
+                <!-- <plugin name="gazebo_ros_head_hokuyo_controller" filename="libgazebo_ros_laser.so"> -->
+                    <!-- 发布数据的话题名 -->
+                    <topicName>/scan</topicName>
+                    <!-- 在tf树所属的坐标框架 -->
+                    <frameName>laser_frame</frameName>
+                </plugin>
+
+            </sensor>
+        </gazebo>
+    <!-- 2D激光雷达gazebo插件部分 -->
+
+    </xacro:macro>
+</robot>

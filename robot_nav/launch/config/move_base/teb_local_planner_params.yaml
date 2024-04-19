@@ -1,0 +1,146 @@
+TebLocalPlannerROS:
+
+
+ # Trajectory
+
+ dt_ref: 0.342            #局部路径规划的解析度,一般设置为车长，较小的值理论上可提供更高精度(单位m)
+ max_samples: 200         #
+ dt_hysteresis: 0.2       #适当增加此参数可以让小车规划路径更平滑
+ teb_autosize: True       #优化期间允许改变轨迹的时域长度,也就是改变 dt_ref
+ exact_arc_length: True         #
+ publish_feedback: False        #发布包含完整轨迹和活动障碍物的反馈
+ global_plan_prune_distance: 1  #
+ feasibility_check_no_poses: 5  #
+ max_global_plan_lookahead_dist: 1.0        #最大向前看距离(单位m)
+ allow_init_with_backwards_motion: True     #允许后退(只影响初始化)
+ global_plan_overwrite_orientation: True    #覆盖全局路径中的临时局部路径点的朝向
+ force_reinit_new_goal_dist: 1.0            #
+ force_reinit_new_goal_angular: 0.78        #
+ visualize_with_time_as_z_axis_scale: 0.0   #
+
+
+#ViaPoints
+ global_plan_viapoint_sep: 1    #
+ via_points_ordered: False      #
+
+
+
+
+
+    
+ # Robot
+         
+ max_vel_x: 1.5             #小车x方向速度(单位m/s)
+ max_vel_x_backwards: 1.5   #小车x负方向速度(单位m/s)
+ max_vel_y: 1.5             #小车y方向速度(单位m/s)
+ max_vel_theta: 2.0         #小车转向速度(单位rad/s)  在物理机器上改为3.14
+ acc_lim_x: 3.0             #x轴加速度限制
+ acc_lim_y: 6.0             #y轴加速度限制
+ acc_lim_theta: 3.0         #角加速度限制
+ min_turning_radius: 0.0    #最小转弯半径(全向小车设置为0表可以原地转弯)
+ wheelbase: 0.248           #小车轮距(即前后轮距离)只有在cmd_angle_instead_rotvel为true时才有效
+ is_footprint_dynamic: False      #机器人的足迹是否是动态的
+ cmd_angle_instead_rotvel: False  #生成轨迹时是否将收到的角速度消息转换为操作上的角度变化。设置成True时，话题cmd_vel.angular.z内的数据是舵机角度
+
+#  footprint_model:
+#    type: "point"
+#    line_start: [0.171, 0.0]
+#    line_end: [-0.171, 0.0]
+ footprint_model:
+    type: "point"
+    vertices: [[0.171, -0.128], [0.171, 0.128],[-0.171, 0.128], [-0.171, -0.128]]
+
+ # GoalTolerance
+    
+ xy_goal_tolerance: 0.01      #距离目标点xy轴的偏差(单位m)
+ yaw_goal_tolerance: 0.1      #距离目标点航向的偏差(单位rad)姿态无需太在意
+ free_goal_vel: False         #设为False时车辆到达终点时的目标速度为0，否则全速冲向目标点
+    
+ # Obstacles
+ #下面这4个参数的设置非常重要，需要根据机器人的外形尺寸小心调整，否则极易出现狭窄空间机器人无法通过或优化不收敛的情况
+ min_obstacle_dist: 0.05                          #最小障碍物距离(单位m)
+ legacy_obstacle_association: True                #是否打开 legacy_obstacle_association
+ obstacle_association_cutoff_factor: 3.6          #如果 legacy_obstacle_association 为True，大于 min_obstacle_dist * (输入参数) 的障碍物点被直接抛弃不再考虑,是false，则不启用        
+ obstacle_association_force_inclusion_factor: 1.5 #如果 legacy_obstacle_association 为True，小于 min_obstacle_dist * (输入参数) 值的障碍物点被强制加入优化框架中,是false，则不启用
+ inflation_dist: 0                                #障碍物膨胀距离,必须大于 min_obstacle_dist 才有效(单位m)
+ include_costmap_obstacles: True                  #导入costmap障碍物(必开)
+ costmap_obstacles_behind_robot_dist: 0.2         #机器人后面的障碍物距离
+ obstacle_poses_affected: 50                      # 对于每一个障碍物 (输入参数) 个相邻的最近poses都会被考虑进来 如果 legacy_obstacle_association 是false，则不启用
+
+ costmap_converter_plugin: ""           #启用 costmap_converter 插件
+ costmap_converter_spin_thread: True    #打开一个单独的线程来处理 costmap_converter
+ costmap_converter_rate: 10             # costmap_converter 插件执行频率(单位hz)
+ dynamic_obstacle_inflation_dist: 0.1   #动态障碍膨胀距离(单位m)
+
+
+
+ # Optimization   
+ no_inner_iterations: 3         #优化optimizer的迭代次数
+ no_outer_iterations: 2         #每次外部循环迭代都会根据所需的时间分辨率dt_ref自动调整轨迹的大小，并调用内部优化器
+ optimization_activate: True    #
+ optimization_verbose: False
+ penalty_epsilon: 0.2
+ obstacle_cost_exponent: 4
+ weight_max_vel_x: 90       #最大允许小车x轴速度的优化权重
+ weight_max_vel_y: 100      #最大允许小车y轴速度的优化权重
+ weight_max_vel_theta: 20   #最大允许小车角速度的优化权重
+ weight_acc_lim_x: 2        #最大允许小车x轴加速度的优化权重
+ weight_acc_lim_y: 2        #最大允许小车y轴加速度的优化权重
+ weight_acc_lim_theta: 2    #最大允许小车角加速度的优化权重
+ weight_kinematics_nh: 1    #非完整运动学的优化权重
+ weight_kinematics_forward_drive: 0 #迫使机器人仅选择前进方向，较小的权重，仍然会允许向后行驶
+ weight_kinematics_turning_radius: 20
+ weight_optimaltime: 3.0            #最优时间权重
+ weight_shortest_path: 0.2
+ weight_obstacle: 5         #以保持与障碍物的最小距离的优化权重
+ weight_inflation: 0.25
+ weight_dynamic_obstacle: 10
+ weight_dynamic_obstacle_inflation: 0.2
+ weight_viapoint: 5
+ weight_adapt_factor: 2
+
+# Recovery
+ oscillation_recovery: False            #是否打开振荡恢复
+ oscillation_v_eps: 0.1 
+ oscillation_omega_eps: 0.1 
+ oscillation_filter_duration: 10 
+ oscillation_recovery_min_duration: 10 
+ shrink_horizon_backup: True        #在自动检测到问题的情况下，允许planner临时缩小范围(50%). TEB将以更近的点作为规划目标，尝试重新规划出可行路径
+ shrink_horizon_min_duration: 10    #如果检测到不可行的轨迹，激活缩小的水平线后备模式，本参数为其最短持续时间
+
+
+
+
+
+
+
+
+
+
+
+
+ # Homotopy Class Planner
+
+ enable_homotopy_class_planning: False      #激活并行规划(占用更多的CPU资源)若在单一路径上运行，则没有必要时用此功能
+ enable_multithreading: True
+ max_number_classes: 1
+ selection_cost_hysteresis: 1.0
+ selection_prefer_initial_plan: 0.9
+ selection_obst_cost_scale: 1.0
+ selection_alternative_time_cost: False
+ roadmap_graph_no_samples: 15
+ roadmap_graph_area_width: 5
+ roadmap_graph_area_length_scale: 1.0
+ h_signature_prescaler: 0.5
+ h_signature_threshold: 0.1
+ obstacle_heading_threshold: 0.45
+ switching_blocking_period: 0.0
+ viapoints_all_candidates: True
+ delete_detours_backwards: True
+ max_ratio_detours_duration_best_duration: 3.0
+ visualize_hc_graph: False
+ visualize_with_time_as_z_axis_scale: False
+
+
+
+

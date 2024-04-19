@@ -1,0 +1,80 @@
+<robot name="xxx_robot" xmlns:xacro="http://www.ros.org/wiki/xacro"> 
+    <xacro:macro name="DeepthCAM" params="parent_link pose coordinate width height fov near far fps">
+    
+        <link name="DeepthCAM_link">
+            <collision>
+                <geometry>
+                    <box size="0.05 0.05 0.05"/>
+                </geometry>            
+            </collision>
+
+            <visual>
+                <geometry>
+                    <box size="0.05 0.05 0.05"/>
+                </geometry>    
+                <material name="black">
+                    <color rgba="0 0 0 0"/>
+                </material>                
+            </visual>
+
+            <inertial>
+                <mass value="1e-2" />
+                <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6" />
+            </inertial>
+        </link>
+
+
+
+        <joint name="DeepthCAM_joint" type="fixed">
+            <origin xyz="${coordinate}" rpy="${pose}"/>
+            <parent link="${parent_link}"/>
+            <child link="DeepthCAM_link"/>
+        </joint>
+
+
+
+        <gazebo reference="DeepthCAM_link">
+            <sensor name="DeepthCAM" type="depth">
+                <update_rate>${fps}</update_rate>
+
+                <camera>
+                    <horizontal_fov>${fov}</horizontal_fov>
+                    <image>
+                        <width>${width}</width>
+                        <height>${height}</height>
+                        <format>R8G8B8</format>
+                    </image>
+                    <clip>
+                        <near>${near}</near>
+                        <far>${far}</far>
+                    </clip>
+                </camera>
+
+                <plugin name="DeepthCAM_controller" filename="libgazebo_ros_openni_kinect.so">
+                    <baseline>0.2</baseline>
+                    <alwaysOn>true</alwaysOn>
+                    <updateRate>${fps}</updateRate>
+                    <cameraName>DeepthCAM</cameraName>
+                    <imageTopicName>DeepthCAM/color/image_raw</imageTopicName>
+                    <cameraInfoTopicName>DeepthCAM/color/camera_info</cameraInfoTopicName>
+                    <depthImageTopicName>DeepthCAM/depth/image_raw</depthImageTopicName>
+                    <depthImageInfoTopicName>DeepthCAM/depth/camera_info</depthImageInfoTopicName>
+                    <pointCloudTopicName>DeepthCAM/depth/points</pointCloudTopicName>
+                    <frameName>DeepthCAM_link</frameName>
+                    <pointCloudCutoff>0.5</pointCloudCutoff>
+                    <pointCloudCutoffMax>3.0</pointCloudCutoffMax>
+                    <distortionK1>0.00000001</distortionK1>
+                    <distortionK2>0.00000001</distortionK2>
+                    <distortionK3>0.00000001</distortionK3>
+                    <distortionT1>0.00000001</distortionT1>
+                    <distortionT2>0.00000001</distortionT2>
+                    <CxPrime>0</CxPrime>
+                    <Cx>0</Cx>
+                    <Cy>0</Cy>
+                    <focalLength>0</focalLength>
+                    <hackBaseline>0</hackBaseline>
+                </plugin>
+            </sensor>
+        </gazebo>
+    </xacro:macro>
+</robot>

@@ -1,0 +1,7 @@
+<launch>  
+  <!-- 载入机器人xacro描述文件 -->  
+  <param name="robot_description" command="$(find xacro)/xacro --inorder $(find urdf_test)/urdf/1_square.xacro" />  
+  
+  <!-- 打开rviz -->
+  <node pkg="rviz" type="rviz" name="rviz" args="-d $(find urdf_test)/rviz/1_square_config.rviz" required="true"/>  
+</launch>

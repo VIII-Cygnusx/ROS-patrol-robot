@@ -1,0 +1,42 @@
+global_costmap:
+  global_frame: map           #全局代价地图的参考坐标系      
+  robot_base_frame: base_link #机器人基座的参考坐标系
+  update_frequency:  0.5      #更新频率
+  publish_frequency: 0.5      #发布频率
+  width: 5                    #y轴方向长(单位m)
+  height: 5                   #x轴方向长(单位m)
+  resolution: 0.03            #分辨率(单位m)
+  static_map: true            #是否为静态地图
+  rolling_window: false       #地图窗口是否可滚动
+  transform_tolerance: 1.0    #从robot_base_frame到global_frame的坐标变换的最大容忍时间
+
+  #footprint_padding: 0.0     #增大膨胀层的大小(这个参数只对inflaion_layer有效)
+  #robot_radius: 0.1          #机器人半径  
+  robot_radius: 0.06           #机器人半径 
+
+  plugins:                    #插件
+    - {name: static_layer,            type: "costmap_2d::StaticLayer"}
+    - {name: obstacle_layer,          type: "costmap_2d::VoxelLayer"}
+    - {name: inflation_layer,         type: "costmap_2d::InflationLayer"} 
+
+
+
+
+  obstacle_layer:
+    enabled: true
+    obstacle_range: 2.5
+    raytrace_range: 3.0
+    inflation_radius: 0.03
+    track_unknown_space: true
+    combination_method: 1
+
+    observation_sources: laser_scan_sensor
+    laser_scan_sensor: {data_type: LaserScan, topic: scan, marking: true, clearing: true}
+
+#膨胀层
+  inflation_layer:
+    enabled:              true
+    #cost_scaling_factor:  12.0  # exponential rate at which the obstacle cost drops off (default: 10)
+    #inflation_radius:     0.6   #0.3 # max. distance from an obstacle at which costs are incurred for planning paths.
+    cost_scaling_factor:   14.0
+    inflation_radius:      7.0   #0.3-0.6

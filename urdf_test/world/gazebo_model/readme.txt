@@ -1,0 +1,2 @@
+把gazebo_model内所有文件夹放入.gazebo/model文件内部
+或者直接把当前文件目录导入到gazebo也可以

@@ -1,0 +1,25 @@
+<robot name="xxx_robot" xmlns:xacro="http://www.ros.org/wiki/xacro"> 
+    <xacro:macro name="ackerman" params="BaseFrame lf rf lr rr">
+        <!-- 四轮阿克曼控制器gazebo插件部分 -->
+        <gazebo>
+            <plugin name="skid_steer_drive_controller" filename="libgazebo_ros_skid_steer_drive.so">
+                <alwaysOn>      true    </alwaysOn>
+                <torque>        2       </torque>
+                <updateRate>    100.0   </updateRate>
+                <broadcastTF>      1    </broadcastTF>
+                <robotNamespace>   /      </robotNamespace>
+                <leftFrontJoint>   ${lf}  </leftFrontJoint>
+                <rightFrontJoint>  ${rf}  </rightFrontJoint>
+                <leftRearJoint>    ${lr}  </leftRearJoint>
+                <rightRearJoint>   ${rr}  </rightRearJoint>
+                <wheelSeparation>  0.26   </wheelSeparation>
+                <wheelDiameter>    0.12   </wheelDiameter>
+                <commandTopic>     cmd_vel      </commandTopic>
+                <odometryTopic>    odom         </odometryTopic>
+                <odometryFrame>    odom         </odometryFrame>                
+                <robotBaseFrame>   ${BaseFrame} </robotBaseFrame>
+            </plugin>
+        </gazebo>
+        <!-- 四轮阿克曼控制器gazebo插件部分 -->
+    </xacro:macro>
+</robot>
